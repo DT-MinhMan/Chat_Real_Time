@@ -2,8 +2,6 @@ import api from '@/lib/axios'
 
 //API service: kết nối với backend
 export const authService = {
-
-  // 
   signUp: async (
     username: string,
     password: string,

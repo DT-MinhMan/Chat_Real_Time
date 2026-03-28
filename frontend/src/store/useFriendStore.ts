@@ -3,7 +3,7 @@ import type { FriendState } from "@/types/store";
 import { create } from "zustand";
 
 // Store quản lý trạng thái bạn bè và lời mời kết bạn.
-export const useFriendStore = create<FriendState>((set, get) => ({
+export const useFriendStore = create<FriendState>((set) => ({
   // Danh sách bạn bè hiện tại.
   friends: [],
 

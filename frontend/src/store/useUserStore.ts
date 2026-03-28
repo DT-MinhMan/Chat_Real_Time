@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useChatStore } from "./useChatStore";
 
 //Quản lý state liên quan đến thông tin người dùng
-export const useUserStore = create<UserState>((set, get) => ({
+export const useUserStore = create<UserState>(() => ({
   updateAvatarUrl: async (formData) => {
     try {
       const { user, setUser } = useAuthStore.getState();

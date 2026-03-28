@@ -67,7 +67,7 @@ export const acceptFriendRequest = async (req, res) => {
     const { requestId } = req.params;
     const userId = req.user._id;
 
-    //Kiểm tra lời mời cso tồn tại không
+    //Kiểm tra lời mời có tồn tại không
     const request = await FriendRequest.findById(requestId);
 
     if (!request) {

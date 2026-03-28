@@ -8,11 +8,11 @@ import {
 } from "../ui/dialog";
 import { UserPlus } from "lucide-react";
 import type { User } from "@/types/user";
-import { useFriendStore } from "@/stores/useFriendStore";
+import { useFriendStore } from "@/store/useFriendStore";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import SearchForm from "@/components/AddFriendModal/SearchForm";
-import SendFriendRequestForm from "@/components/AddFriendModal/SendFriendRequestForm";
+import SearchForm from "@/components/addFriendModal/SearchForm";
+import SendFriendRequestForm from "@/components/addFriendModal/SendFriendRequestForm";
 
 export interface IFormValues {
   username: string;
@@ -35,8 +35,10 @@ const AddFriendModal = () => {
     defaultValues: { username: "", message: "" },
   });
 
+  //Lưu username người dùng nhập vào 
   const usernameValue = watch("username");
 
+  //Logic tìm người dùng bằng username
   const handleSearch = handleSubmit(async (data) => {
     const username = data.username.trim();
     if (!username) return;
@@ -53,11 +55,12 @@ const AddFriendModal = () => {
         setIsFound(false);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error when find user",error);
       setIsFound(false);
     }
   });
 
+  //Logic gửi lời mời kết bặn
   const handleSend = handleSubmit(async (data) => {
     if (!searchUser) return;
 
@@ -67,10 +70,11 @@ const AddFriendModal = () => {
 
       handleCancel();
     } catch (error) {
-      console.error("Lỗi xảy ra khi gửi request từ form", error);
+      console.error("Error when send request", error);
     }
   });
 
+  //Reset nếu cancel
   const handleCancel = () => {
     reset();
     setSearchedUsername("");
@@ -82,13 +86,13 @@ const AddFriendModal = () => {
       <DialogTrigger asChild>
         <div className="flex justify-center items-center size-5 rounded-full hover:bg-sidebar-accent cursor-pointer z-10">
           <UserPlus className="size-4" />
-          <span className="sr-only">Kết bạn</span>
+          <span className="sr-only">Add friend</span>
         </div>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-[425px] border-none">
         <DialogHeader>
-          <DialogTitle>Kết Bạn</DialogTitle>
+          <DialogTitle>Add friend</DialogTitle>
         </DialogHeader>
 
         {!isFound && (

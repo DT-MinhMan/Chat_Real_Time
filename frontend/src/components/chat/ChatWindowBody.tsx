@@ -21,11 +21,11 @@ const ChatWindowBody = () => {
   const selectedConvo = conversations.find((c) => c._id === activeConversationId);
   const key = `chat-scroll-${activeConversationId}`;
 
-  // ref
+  // tham chiếu đến cuối đoạn tin nhắn
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // seen status
+  // Kiểm tra tin nhắn đã đọc hay chưa
   useEffect(() => {
     const lastMessage = selectedConvo?.lastMessage;
     if (!lastMessage) {
@@ -44,6 +44,7 @@ const ChatWindowBody = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [activeConversationId]);
 
+  // load thêm tin khi người dùng kéo lên trên
   const fetchMoreMessages = async () => {
     if (!activeConversationId) {
       return;
@@ -52,10 +53,11 @@ const ChatWindowBody = () => {
     try {
       await fetchMessages(activeConversationId);
     } catch (error) {
-      console.error("Lỗi xảy ra khi fetch thêm tin", error);
+      console.error("Error when fetch more message", error);
     }
   };
 
+  //Giữ cho vị trí cuộn giữ nguyên lúc load thêm tin nhắn mới
   const handleScrollSave = () => {
     const container = containerRef.current;
     if (!container || !activeConversationId) {

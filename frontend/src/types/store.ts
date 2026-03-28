@@ -9,9 +9,8 @@ export interface AuthState {
   loading: boolean;
 
   setAccessToken: (accessToken: string) => void;
-
+  setUser: (user: User) => void;
   clearState: () => void;
-
   signUp: (
     username: string,
     password: string,
@@ -19,13 +18,9 @@ export interface AuthState {
     firstName: string,
     lastName: string
   ) => Promise<void>;
-
   signIn: (username: string, password: string) => Promise<void>;
-
   signOut: () => Promise<void>;
-
   fetchMe: () => Promise<void>;
-
   refresh: () => Promise<void>;
 }
 
@@ -76,8 +71,9 @@ export interface ChatState {
   addMessage: (message: Message) => Promise<void>;
 
   // Cập nhật convo real time
-  updateConversation: (conversation: unknown) => void;
-
+  // updateConversation: (conversation: unknown) => void;
+  updateConversation: (conversation: Partial<Conversation> & { _id: string }) => void;
+ 
   markAsSeen: () => Promise<void>;
 
   addConvo: (convo: Conversation) => void;

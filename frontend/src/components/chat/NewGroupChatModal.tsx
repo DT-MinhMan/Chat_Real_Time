@@ -1,4 +1,4 @@
-import { useFriendStore } from "@/stores/useFriendStore";
+import { useFriendStore } from "@/store/useFriendStore";
 import { useState } from "react";
 import {
   Dialog,
@@ -14,10 +14,11 @@ import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import type { Friend } from "@/types/user";
 import IniviteSuggestionList from "../newGroupChat/IniviteSuggestionList";
-import SelectedUsersList from "../newGroupChat/SelectedUsersList";
+import SelectedUsersList from "../newGroupChat/SelectedUserList";
 import { toast } from "sonner";
-import { useChatStore } from "@/stores/useChatStore";
+import { useChatStore } from "@/store/useChatStore";
 
+//Tạo nhóm chat mới
 const NewGroupChatModal = () => {
   const [groupName, setGroupName] = useState("");
   const [search, setSearch] = useState("");
@@ -29,20 +30,23 @@ const NewGroupChatModal = () => {
     await getFriends();
   };
 
+  //Thêm người vừa được mời vào danh sách group chat
   const handleSelectFriend = (friend: Friend) => {
     setInvitedUsers([...invitedUsers, friend]);
     setSearch("");
   };
 
+  //Xóa người dùng khỏi danh sách
   const handleRemoveFriend = (friend: Friend) => {
     setInvitedUsers(invitedUsers.filter((u) => u._id !== friend._id));
   };
 
+  //Submit 
   const handleSubmit = async (e: React.FormEvent) => {
     try {
       e.preventDefault();
       if (invitedUsers.length === 0) {
-        toast.warning("Bạn phải mời ít nhất 1 thành viên vào nhóm");
+        toast.warning("You must invite at least one member to the group.");
         return;
       }
 
@@ -55,10 +59,12 @@ const NewGroupChatModal = () => {
       setSearch("");
       setInvitedUsers([]);
     } catch (error) {
-      console.error("Lỗi xảy ra khi handleSubmit trong NewGroupChatModal:", error);
+      console.error("Error when handlingSubmit in NewGroupChatModal.:", error);
     }
   };
 
+
+//Hiển thị user gợi ý dựa trên tên nhập 
   const filteredFriends = friends.filter(
     (friend) =>
       friend.displayName.toLowerCase().includes(search.toLowerCase()) &&
@@ -74,13 +80,13 @@ const NewGroupChatModal = () => {
           className="flex z-10 justify-center items-center size-5 rounded-full hover:bg-sidebar-accent transition cursor-pointer"
         >
           <Users className="size-4" />
-          <span className="sr-only">Tạo nhóm</span>
+          <span className="sr-only">Create a group</span>
         </Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-[425px] border-none">
         <DialogHeader>
-          <DialogTitle className="capitalize">tạo nhóm chat mới</DialogTitle>
+          <DialogTitle className="capitalize">create a new group chat</DialogTitle>
         </DialogHeader>
 
         <form
@@ -93,11 +99,11 @@ const NewGroupChatModal = () => {
               htmlFor="groupName"
               className="text-sm font-semibold"
             >
-              Tên nhóm
+              Group name
             </Label>
             <Input
               id="groupName"
-              placeholder="Gõ tên nhóm vào đây..."
+              placeholder="Type the group name here...."
               className="glass border-border/50 focus:border-primary/50 transition-smooth"
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
@@ -111,12 +117,12 @@ const NewGroupChatModal = () => {
               htmlFor="invite"
               className="text-sm font-semibold"
             >
-              Mời thành viên
+              Invite members
             </Label>
 
             <Input
               id="invite"
-              placeholder="Tìm theo tên hiển thị..."
+              placeholder="Search by display name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="flex-1"
@@ -144,11 +150,11 @@ const NewGroupChatModal = () => {
               className="flex-1 bg-gradient-chat text-white hover:opacity-90 transition-smooth"
             >
               {loading ? (
-                <span>Đang tạo...</span>
+                <span>Creating...</span>
               ) : (
                 <>
                   <UserPlus className="size-4 mr-2" />
-                  Tạo nhóm
+                  Create a group
                 </>
               )}
             </Button>

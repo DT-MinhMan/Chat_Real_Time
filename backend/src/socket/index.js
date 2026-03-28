@@ -37,10 +37,12 @@ io.on("connection", async (socket) => {
     socket.join(id);
   });
 
+  //Khi user tạo convo mới ở frontend, user sẽ join vào phòng này
   socket.on("join-conversation", (conversationId) => {
     socket.join(conversationId);
   });
 
+  //Tạo phòng theo user id
   socket.join(user._id.toString());
 
   socket.on("disconnect", () => {

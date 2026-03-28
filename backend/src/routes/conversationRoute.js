@@ -16,7 +16,7 @@ router.post("/", checkFriendship, createConversation);
 router.get("/", getConversations);
 //Lấy tin nhắn
 router.get("/:conversationId/messages", getMessages);
-
+//Đánh dấu đã đọc tin nhắn 
 router.patch("/:conversationId/seen", markAsSeen);
 
 export default router;

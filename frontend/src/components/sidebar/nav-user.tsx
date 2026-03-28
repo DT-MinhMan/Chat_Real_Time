@@ -20,7 +20,7 @@ import type { User } from "@/types/user";
 import Logout from "../auth/Logout";
 import { useState } from "react";
 import FriendRequestDialog from "../friendRequest/FriendRequestDialog";
-import ProfileDialog from "../profile/ProfileDialog";
+import ProfileDialog from "../profile/profileDialog";
 
 export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar();

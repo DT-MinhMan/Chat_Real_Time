@@ -5,7 +5,7 @@ import ChatWindowHeader from "./ChatWindowHeader";
 import ChatWindowBody from "./ChatWindowBody";
 import MessageInput from "./MessageInput";
 import { useEffect } from "react";
-// import ChatWindowSkeleton from "../skeleton/ChatWindowSkeleton";
+import ChatWindowSkeleton from "../skeleton/chatWindowSkeleton";
 
 const ChatWindowLayout = () => {
   const {
@@ -27,7 +27,7 @@ const ChatWindowLayout = () => {
       try {
         await markAsSeen();
       } catch (error) {
-        console.error("Lỗi khi markSeen", error);
+        console.error("Error when markSeen", error);
       }
     };
 

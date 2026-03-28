@@ -20,9 +20,9 @@ import GroupChatList from "../chat/GroupChatList";
 import AddFriendModal from "../chat/AddFriendModal";
 import DirectMessageList from "../chat/DirectMessageList";
 import { useThemeStore } from "@/store/useThemeStore";
-import { useAuthStore } from "@/stores/useAuthStore";
-import ConversationSkeleton from "../skeleton/ConversationSkeleton";
-import { useChatStore } from "@/stores/useChatStore";
+import { useAuthStore } from "@/store/useAuthStore";
+import ConversationSkeleton from "../skeleton/conversationSkeleton";
+import { useChatStore } from "@/store/useChatStore";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isDark, toggleTheme } = useThemeStore();

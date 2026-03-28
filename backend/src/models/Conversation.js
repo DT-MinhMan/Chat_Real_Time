@@ -98,7 +98,7 @@ const conversationSchema = new mongoose.Schema(
 
 //Compound index sắp xếp theo người tham gia
 conversationSchema.index({
-  "participant.userId": 1,
+  "participants.userId": 1,
   lastMessageAt: -1,
 });
 

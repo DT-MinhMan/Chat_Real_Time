@@ -50,7 +50,6 @@ export const sendDirectMessage = async (req, res) => {
     await conversation.save();
 
     emitNewMessage(io, conversation, message);
-    emitNewMessage(conversation, message);
 
     return res.status(201).json({ message });
   } catch (error) {

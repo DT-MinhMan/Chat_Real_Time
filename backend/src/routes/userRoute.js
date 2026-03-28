@@ -3,7 +3,7 @@ import {
   authMe,
   searchUserByUsername,
   uploadAvatar,
-} from "../controllers/userController.js";
+} from "../controllers/userControllers.js";
 import { upload } from "../middlewares/uploadMiddleware.js";
 
 //Định nghĩa api endpoint xác thực người dùng  

@@ -10,7 +10,7 @@ export const sendFriendRequest = async (req, res) => {
     const from = req.user._id;
 
     //Gửi lời mời cho chính mình
-    if (from === to) {
+    if (from.toString() === to.toString()) {
       return res.status(400).json({ message: "You can not send friend request to yourself" });
     }
 

@@ -127,7 +127,7 @@ export const refreshToken = async (req, res) => {
     }
 
     // Kiểm tra hết hạn chưa
-    if (session.expiresAt < new Date()) {
+    if (session.expiredAt < new Date()) {
       return res.status(403).json({ message: "Token expired." });
     }
 

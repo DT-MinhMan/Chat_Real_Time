@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema({
     avatarUrl: {
         type: String //Lưu link CDN để hiển thị hình 
     },
-    avaterId: {
+    avatarId: {
          type: String //Lưu cloudinary public_id để xóa hình
     },
     bio: {
@@ -41,7 +41,7 @@ const userSchema = new mongoose.Schema({
     }
 },
     {
-        timeStamp: true
+        timestamps: true
     }
 );
 

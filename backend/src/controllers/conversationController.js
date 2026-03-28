@@ -143,6 +143,15 @@ export const getMessages = async (req, res) => {
     const { conversationId } = req.params;
     const { limit = 50, cursor } = req.query;
 
+    const canAccess = await Conversation.exists({
+      _id: conversationId,
+      "participants.userId": req.user._id,
+    });
+
+    if (!canAccess) {
+      return res.status(403).json({ message: "You are not in this conversation." });
+    }
+
     const query = { conversationId };
 
     //Load tin nhắn cũ dựa trên cursor chỉ ngày 
@@ -203,6 +212,14 @@ export const markAsSeen = async (req, res) => {
     //Kiểm tra hội thoại có tồn tại ko
     if (!conversation) {
       return res.status(404).json({ message: "Conversation not exists" });
+    }
+
+    const isMember = (conversation.participants || []).some(
+      (p) => p.userId.toString() === userId
+    );
+
+    if (!isMember) {
+      return res.status(403).json({ message: "You are not in this conversation." });
     }
 
     const last = conversation.lastMessage;

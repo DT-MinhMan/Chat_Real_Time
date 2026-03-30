@@ -24,7 +24,7 @@ Dự án này cho phép người dùng:
 - RESTful API
 
 ### Database
-- MongoDB / PostgreSQL (tùy implementation)
+- MongoDB
 
 ## ⚙️ Tính năng chính
 
@@ -112,3 +112,7 @@ JWT_SECRET=your_secret_key
 LINK DEMO FRONTEND: https://chat-real-timefrontend.vercel.app/
 
 LINK DEMO BACKEND: https://chat-real-time-backend.onrender.com
+
+Tài khoản đăng nhập 1: User2 - 123456
+
+Tài khoản đăng nhập 2: User3 - 123456

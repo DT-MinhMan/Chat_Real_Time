@@ -11,8 +11,7 @@ import { useSocketStore } from "@/store/useSocketStore";
 //Phần tin nhắn trực tiếp 
 const DirectMessageCard = ({ convo }: { convo: Conversation }) => {
     const { user } = useAuthStore();
-    const { activeConversationId, setActiveConversation, messages, fetchMessages } =
-        useChatStore();
+    const { activeConversationId, setActiveConversation, messages, fetchMessages } = useChatStore();
     const { onlineUsers } = useSocketStore();
 
     if (!user) return null;

@@ -21,6 +21,7 @@ export const sendFriendRequest = async (req, res) => {
       return res.status(404).json({ message: "User not exists" });
     }
 
+    //Kiểm tra đã có kết bạn hay chưa
     let userA = from.toString();
     let userB = to.toString();
 
@@ -28,7 +29,6 @@ export const sendFriendRequest = async (req, res) => {
       [userA, userB] = [userB, userA];
     }
 
-    //Kiểm tra đã có kết bạn hay chưa
     const [alreadyFriends, existingRequest] = await Promise.all([
       Friend.findOne({ userA, userB }),
       FriendRequest.findOne({

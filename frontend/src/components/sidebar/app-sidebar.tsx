@@ -23,11 +23,17 @@ import { useThemeStore } from "@/store/useThemeStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import ConversationSkeleton from "../skeleton/conversationSkeleton";
 import { useChatStore } from "@/store/useChatStore";
+import { useEffect } from "react";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isDark, toggleTheme } = useThemeStore();
-  const { user } = useAuthStore();
-  const { convoLoading } = useChatStore();
+  const { user, accessToken } = useAuthStore();
+  const { convoLoading, fetchConversations } = useChatStore();
+
+  useEffect(() => {
+    if (!accessToken) return;
+    fetchConversations();
+  }, [accessToken, fetchConversations]);
 
   return (
     <Sidebar

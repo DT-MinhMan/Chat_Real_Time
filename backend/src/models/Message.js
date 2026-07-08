@@ -18,8 +18,30 @@ const messageSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    type: {
+      type: String,
+      enum: ["text", "call"],
+      default: "text",
+    },
     imgUrl: {
       type: String,
+    },
+    callMeta: {
+      callId: String,
+      callType: {
+        type: String,
+        enum: ["audio", "video"],
+      },
+      status: {
+        type: String,
+        enum: ["missed", "rejected", "completed", "cancelled"],
+      },
+      duration: {
+        type: Number,
+        default: 0,
+      },
+      startedAt: Date,
+      endedAt: Date,
     },
   },
   {

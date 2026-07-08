@@ -20,6 +20,7 @@ export interface Group {
 export interface LastMessage {
   _id: string;
   content: string;
+  type?: "text" | "call";
   createdAt: string;
   sender: {
     _id: string;
@@ -50,7 +51,16 @@ export interface Message {
   conversationId: string;
   senderId: string;
   content: string | null;
+  type?: "text" | "call";
   imgUrl?: string | null;
+  callMeta?: {
+    callId: string;
+    callType: "audio" | "video";
+    status: "missed" | "rejected" | "completed" | "cancelled";
+    duration?: number;
+    startedAt?: string;
+    endedAt?: string;
+  };
   updatedAt?: string | null;
   createdAt: string;
   isOwn?: boolean;

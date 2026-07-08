@@ -3,6 +3,7 @@ import { io, type Socket } from "socket.io-client";
 import { useAuthStore } from "./useAuthStore";
 import type { SocketState } from "@/types/store";
 import { useChatStore } from "./useChatStore";
+import { useCallStore } from "./useCallStore";
 
 const baseURL = import.meta.env.VITE_SOCKET_URL;
 
@@ -44,6 +45,7 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       const lastMessage = {
         _id: conversation.lastMessage._id,
         content: conversation.lastMessage.content,
+        type: conversation.lastMessage.type,
         createdAt: conversation.lastMessage.createdAt,
         sender: {
           _id: conversation.lastMessage.senderId,
@@ -85,12 +87,57 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       useChatStore.getState().addConvo(conversation);
       socket.emit("join-conversation", conversation._id);
     });
+
+    socket.on("call:incoming", (payload) => {
+      useCallStore.getState().receiveIncomingCall(payload);
+    });
+
+    socket.on("call:outgoing", (payload) => {
+      useCallStore.getState().handleOutgoingCall(payload);
+    });
+
+    socket.on("call:accepted", (payload) => {
+      useCallStore.getState().handleCallAccepted(payload);
+    });
+
+    socket.on("call:rejected", (payload) => {
+      useCallStore.getState().handleCallRejected(payload);
+    });
+
+    socket.on("call:ended", (payload) => {
+      useCallStore.getState().handleRemoteEndCall(payload);
+    });
+
+    socket.on("call:offer", (payload) => {
+      useCallStore.getState().handleOffer(payload);
+    });
+
+    socket.on("call:answer", (payload) => {
+      useCallStore.getState().handleAnswer(payload);
+    });
+
+    socket.on("call:ice-candidate", (payload) => {
+      useCallStore.getState().handleIceCandidate(payload);
+    });
+
+    socket.on("call:busy", () => {
+      useCallStore.getState().handleCallError({ reason: "User is busy." });
+    });
+
+    socket.on("call:unavailable", () => {
+      useCallStore.getState().handleCallError({ reason: "User is offline." });
+    });
+
+    socket.on("call:error", (payload) => {
+      useCallStore.getState().handleCallError(payload);
+    });
   },
 
   // Ngắt kết nối socket khi logout/unmount.
   disconnectSocket: () => {
     const socket = get().socket;
     if (socket) {
+      useCallStore.getState().cleanupCall();
       socket.disconnect();
       set({ socket: null });
     }

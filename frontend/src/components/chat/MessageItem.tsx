@@ -3,6 +3,7 @@ import type { Conversation, Message, Participant } from "@/types/chat";
 import UserAvatar from "./UserAvatar";
 import { Card } from "../ui/card";
 import { Badge } from "../ui/badge";
+import CallMessageItem from "./CallMessageItem";
 
 interface MessageItemProps {
     message: Message;
@@ -34,6 +35,19 @@ const MessageItem = ({
     const participant = selectedConvo.participants.find(
         (p: Participant) => p._id.toString() === message.senderId.toString()
     );
+
+    if (message.type === "call") {
+        return (
+            <>
+                {isShowTime && (
+                    <span className="flex justify-center text-xs text-muted-foreground px-1">
+                        {formatMessageTime(new Date(message.createdAt))}
+                    </span>
+                )}
+                <CallMessageItem message={message} />
+            </>
+        );
+    }
 
     return (
         <>

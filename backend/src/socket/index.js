@@ -4,6 +4,7 @@ import http from "http";
 import express from "express";
 import { socketAuthMiddleware } from "../middlewares/socketMiddleware.js";
 import { getUserConversationsForSocketIO } from "../controllers/conversationController.js";
+import { registerCallHandlers } from "./handlers/callSocketHandler.js";
 
 const app = express();
 
@@ -19,17 +20,22 @@ const io = new Server(server, {
 io.use(socketAuthMiddleware);
 
 //Dùng một danh sách onlineUser để đánh dấu user online
-const onlineUsers = new Map(); // {userId: socketId}
+const onlineUsers = new Map(); // { userId: Set<socketId> }
+
+const getOnlineUserIds = () => Array.from(onlineUsers.keys());
 
 io.on("connection", async (socket) => {
   const user = socket.user;
 
   // console.log(`${user.displayName} online with socket ${socket.id}`);
 
-  onlineUsers.set(user._id, socket.id);
+  const userId = user._id.toString();
+  const userSockets = onlineUsers.get(userId) ?? new Set();
+  userSockets.add(socket.id);
+  onlineUsers.set(userId, userSockets);
 
   //Thông báo có người dùng mới onl
-  io.emit("online-users", Array.from(onlineUsers.keys()));
+  io.emit("online-users", getOnlineUserIds());
 
   //Join room với socket.io để gửi tin nhắn real time 
   const conversationIds = await getUserConversationsForSocketIO(user._id);
@@ -43,11 +49,21 @@ io.on("connection", async (socket) => {
   });
 
   //Tạo phòng theo user id
-  socket.join(user._id.toString());
+  socket.join(userId);
+
+  registerCallHandlers(io, socket, onlineUsers);
 
   socket.on("disconnect", () => {
-    onlineUsers.delete(user._id);
-    io.emit("online-users", Array.from(onlineUsers.keys()));
+    const sockets = onlineUsers.get(userId);
+    if (sockets) {
+      sockets.delete(socket.id);
+
+      if (sockets.size === 0) {
+        onlineUsers.delete(userId);
+      }
+    }
+
+    io.emit("online-users", getOnlineUserIds());
     /* console.log(`socket disconnected: ${socket.id}`); */
   });
 });

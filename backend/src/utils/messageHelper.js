@@ -12,6 +12,7 @@ export const updateConversationAfterCreateMessage = (
     lastMessage: {
       _id: message._id,
       content: message.content,
+      type: message.type || "text",
       senderId,
       createdAt: message.createdAt,
     },

@@ -54,7 +54,7 @@ export const uploadAvatar = async (req, res) => {
                 avatarId: result.public_id,
             },
             {
-                new: true,
+                returnDocument: 'after',
             }
         ).select("avatarUrl");
 

@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+vendor/
+.venv/
+venv/
+env/
+
+# Build/cache outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+.turbo/
+.cache/
+coverage/
+
+# Logs/temp
+logs/
+*.log
+*.tmp
+*.temp
+*.bak
+.DS_Store
+Thumbs.db
+
+# Binary/media/archive
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+*.mp4
+*.mp3
+*.pdf
+*.zip
+*.tar.gz
+*.rar
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.p12
+*.pfx
+.aws/
+.ssh/

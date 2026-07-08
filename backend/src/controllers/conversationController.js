@@ -196,7 +196,7 @@ export const getUserConversationsForSocketIO = async (userId) => {
 
     return conversations.map((c) => c._id.toString());
   } catch (error) {
-    console.error("Lỗi khi fetch conversations: ", error);
+    console.error("Error when fetch conversations: ", error);
     return [];
   }
 };
@@ -242,7 +242,7 @@ export const markAsSeen = async (req, res) => {
         $set: { [`unreadCounts.${userId}`]: 0 },
       },
       {
-        new: true,
+        returnDocument: 'after',
       },
     );
 

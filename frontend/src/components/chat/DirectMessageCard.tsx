@@ -7,11 +7,21 @@ import UserAvatar from "./UserAvatar";
 import StatusBadge from "./StatusBadge";
 import UnreadCountBadge from "./UnreadCountBadge";
 import { useSocketStore } from "@/store/useSocketStore";
+import { useFriendStore } from "@/store/useFriendStore";
+import { toast } from "sonner";
 
 //Phần tin nhắn trực tiếp 
 const DirectMessageCard = ({ convo }: { convo: Conversation }) => {
     const { user } = useAuthStore();
-    const { activeConversationId, setActiveConversation, messages, fetchMessages } = useChatStore();
+    const {
+        activeConversationId,
+        clearConversationMessagesForMe,
+        setActiveConversation,
+        messages,
+        fetchMessages,
+        updateConversation,
+    } = useChatStore();
+    const { blockUser, unblockUser } = useFriendStore();
     const { onlineUsers } = useSocketStore();
 
     if (!user) return null;
@@ -33,6 +43,32 @@ const DirectMessageCard = ({ convo }: { convo: Conversation }) => {
         }
     };
 
+    const handleClearMessages = async (id: string) => {
+        try {
+            await clearConversationMessagesForMe(id);
+            toast.success("Chat deleted for you.");
+        } catch {
+            toast.error("Could not delete this chat. Please try again.");
+        }
+    };
+
+    const handleToggleBlock = async () => {
+        try {
+            if (convo.blockStatus === "blocked_by_me") {
+                await unblockUser(otherUser._id);
+                updateConversation({ _id: convo._id, blockStatus: "none" });
+                toast.success("User unblocked.");
+                return;
+            }
+
+            await blockUser(otherUser._id);
+            updateConversation({ _id: convo._id, blockStatus: "blocked_by_me" });
+            toast.success("User blocked.");
+        } catch {
+            toast.error("Could not update block status. Please try again.");
+        }
+    };
+
     return (
         <ChatCard
             convoId={convo._id}
@@ -44,6 +80,9 @@ const DirectMessageCard = ({ convo }: { convo: Conversation }) => {
             }
             isActive={activeConversationId === convo._id}
             onSelect={handleSelectConversation}
+            onClearMessages={handleClearMessages}
+            blockStatus={convo.blockStatus ?? "none"}
+            onToggleBlock={handleToggleBlock}
             unreadCount={unreadCount}
             leftSection={
                 <>

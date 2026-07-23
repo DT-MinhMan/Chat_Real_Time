@@ -13,6 +13,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import SearchForm from "@/components/addFriendModal/SearchForm";
 import SendFriendRequestForm from "@/components/addFriendModal/SendFriendRequestForm";
+import { Button } from "../ui/button";
 
 export interface IFormValues {
   username: string;
@@ -84,10 +85,16 @@ const AddFriendModal = () => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div className="flex justify-center items-center size-5 rounded-full hover:bg-sidebar-accent cursor-pointer z-10">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          title="Add friend"
+          className="cursor-pointer"
+        >
           <UserPlus className="size-4" />
           <span className="sr-only">Add friend</span>
-        </div>
+        </Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-[425px] border-none">

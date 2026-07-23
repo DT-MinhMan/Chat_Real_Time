@@ -32,6 +32,7 @@ export interface LastMessage {
 export interface Conversation {
   _id: string;
   type: "direct" | "group";
+  blockStatus?: "none" | "blocked_by_me" | "blocked_me";
   group: Group;
   participants: Participant[];
   lastMessageAt: string;

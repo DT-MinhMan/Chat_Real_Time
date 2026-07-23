@@ -1,5 +1,6 @@
 import Conversation from "../models/Conversation.js";
 import Message from "../models/Message.js";
+import UserBlock from "../models/UserBlock.js";
 import { io } from "../socket/index.js";
 
 //Tạo cuộc trò chuyện mới
@@ -99,6 +100,7 @@ export const getConversations = async (req, res) => {
     const userId = req.user._id;
     const conversations = await Conversation.find({
       "participants.userId": userId,
+      hiddenFor: { $ne: userId },
     })
       .sort({ lastMessageAt: -1, updatedAt: -1 })
       .populate({
@@ -115,6 +117,41 @@ export const getConversations = async (req, res) => {
       });
 
     //Duyệt qua cuộc trò chuyện và format lại cho frontend
+    const directUserIds = conversations
+      .filter((convo) => convo.type === "direct")
+      .map((convo) =>
+        (convo.participants || []).find(
+          (p) => p.userId?._id?.toString() !== userId.toString()
+        )?.userId?._id
+      )
+      .filter(Boolean);
+
+    const blocks = directUserIds.length
+      ? await UserBlock.find({
+          $or: [
+            { blocker: userId, blocked: { $in: directUserIds } },
+            { blocker: { $in: directUserIds }, blocked: userId },
+          ],
+        }).lean()
+      : [];
+
+    const blockStatusByUserId = new Map();
+
+    blocks.forEach((block) => {
+      const blocker = block.blocker.toString();
+      const blocked = block.blocked.toString();
+      const otherUserId = blocker === userId.toString() ? blocked : blocker;
+
+      if (blocker === userId.toString()) {
+        blockStatusByUserId.set(otherUserId, "blocked_by_me");
+        return;
+      }
+
+      if (!blockStatusByUserId.has(otherUserId)) {
+        blockStatusByUserId.set(otherUserId, "blocked_me");
+      }
+    });
+
     const formatted = conversations.map((convo) => {
       const participants = (convo.participants || []).map((p) => ({
         _id: p.userId?._id,
@@ -122,11 +159,18 @@ export const getConversations = async (req, res) => {
         avatarUrl: p.userId?.avatarUrl ?? null,
         joinedAt: p.joinedAt,
       }));
+      const otherUser =
+        convo.type === "direct"
+          ? participants.find((p) => p._id?.toString() !== userId.toString())
+          : null;
 
       return {
         ...convo.toObject(),
         unreadCounts: convo.unreadCounts || {},
         participants,
+        blockStatus: otherUser
+          ? blockStatusByUserId.get(otherUser._id.toString()) ?? "none"
+          : "none",
       };
     });
 
@@ -152,7 +196,10 @@ export const getMessages = async (req, res) => {
       return res.status(403).json({ message: "You are not in this conversation." });
     }
 
-    const query = { conversationId };
+    const query = {
+      conversationId,
+      deletedFor: { $ne: req.user._id },
+    };
 
     //Load tin nhắn cũ dựa trên cursor chỉ ngày 
     if (cursor) {
@@ -187,6 +234,42 @@ export const getMessages = async (req, res) => {
 };
 
 //Lấy tin nhắn người dùng để socket.io gom nhóm 
+export const clearConversationMessagesForMe = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const userId = req.user._id;
+
+    const canAccess = await Conversation.exists({
+      _id: conversationId,
+      "participants.userId": userId,
+    });
+
+    if (!canAccess) {
+      return res.status(403).json({ message: "You are not in this conversation." });
+    }
+
+    await Message.updateMany(
+      {
+        conversationId,
+        deletedFor: { $ne: userId },
+      },
+      {
+        $addToSet: { deletedFor: userId },
+      }
+    );
+
+    await Conversation.findByIdAndUpdate(conversationId, {
+      $addToSet: { hiddenFor: userId },
+      $set: { [`unreadCounts.${userId}`]: 0 },
+    });
+
+    return res.status(200).json({ message: "Conversation messages cleared for you." });
+  } catch (error) {
+    console.error("Error when clearing conversation messages", error);
+    return res.status(500).json({ message: "System error" });
+  }
+};
+
 export const getUserConversationsForSocketIO = async (userId) => {
   try {
     const conversations = await Conversation.find(

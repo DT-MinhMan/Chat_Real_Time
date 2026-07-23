@@ -1,5 +1,6 @@
 import Conversation from "../models/Conversation.js";
 import Friend from "../models/Friend.js";
+import UserBlock from "../models/UserBlock.js";
 
 //Middleware kiểm tra có kết bạn hay không
 const pair = (a, b) => (a < b ? [a, b] : [b, a]);
@@ -9,18 +10,32 @@ export const checkFriendship = async (req, res, next) => {
     const me = req.user._id.toString();
     const recipientId = req.body?.recipientId ?? null;
     const memberIds = req.body?.memberIds ?? [];
+    const directRecipientId =
+      recipientId ?? (req.body?.type === "direct" ? memberIds[0] : null);
 
     if (!recipientId && memberIds.length === 0) {
       return res.status(400).json({ message: "Recipient ID or member ID must be provided." });
     }
 
-    if (recipientId) {
-      const [userA, userB] = pair(me, recipientId);
+    if (directRecipientId) {
+      const [userA, userB] = pair(me, directRecipientId);
 
-      const isFriend = await Friend.findOne({ userA, userB });
+      const [isFriend, block] = await Promise.all([
+        Friend.findOne({ userA, userB }),
+        UserBlock.findOne({
+          $or: [
+            { blocker: me, blocked: directRecipientId },
+            { blocker: directRecipientId, blocked: me },
+          ],
+        }),
+      ]);
 
       if (!isFriend) {
         return res.status(403).json({ message: "You haven't befriended this person yet." });
+      }
+
+      if (block) {
+        return res.status(403).json({ message: "You can not message this user." });
       }
 
       return next();

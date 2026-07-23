@@ -8,7 +8,7 @@ export const friendService = {
 
   async sendFriendRequest(to: string, message?: string) {
     const res = await api.post("/friends/requests", { to, message });
-    return res.data.message;
+    return res.data;
   },
 
   async getAllFriendRequest() {
@@ -24,7 +24,7 @@ export const friendService = {
   async acceptRequest(requestId: string) {
     try {
       const res = await api.post(`/friends/requests/${requestId}/accept`);
-      return res.data.requestAcceptedBy;
+      return res.data.newFriend;
     } catch (error) {
       console.error("Error when call acceptRequest", error);
     }
@@ -41,5 +41,19 @@ export const friendService = {
   async getFriendList() {
     const res = await api.get("/friends");
     return res.data.friends;
+  },
+
+  async removeFriend(friendId: string) {
+    await api.delete(`/friends/${friendId}`);
+  },
+
+  async blockUser(userId: string) {
+    const res = await api.post(`/friends/blocks/${userId}`);
+    return res.data;
+  },
+
+  async unblockUser(userId: string) {
+    const res = await api.delete(`/friends/blocks/${userId}`);
+    return res.data;
   },
 };

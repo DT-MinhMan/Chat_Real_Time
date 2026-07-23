@@ -75,9 +75,12 @@ const NewGroupChatModal = () => {
     <Dialog>
       <DialogTrigger asChild>
         <Button
+          type="button"
           variant="ghost"
+          size="icon-xs"
+          title="Create a group"
           onClick={handleGetFriends}
-          className="flex z-10 justify-center items-center size-5 rounded-full hover:bg-sidebar-accent transition cursor-pointer"
+          className="cursor-pointer"
         >
           <Users className="size-4" />
           <span className="sr-only">Create a group</span>

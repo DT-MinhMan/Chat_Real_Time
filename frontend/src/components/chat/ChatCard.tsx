@@ -1,6 +1,13 @@
 import { Card } from "@/components/ui/card";
 import { formatOnlineTime, cn } from "@/lib/utils";
-import { MoreHorizontal } from "lucide-react";
+import { Ban, MoreHorizontal, Trash2, Undo2 } from "lucide-react";
+import { Button } from "../ui/button";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 //thẻ chat gồm avatar, tin chưa đọc, thời gian tin gần nhất
 interface ChatCardProps {
     convoId: string;
@@ -11,6 +18,9 @@ interface ChatCardProps {
     unreadCount?: number;
     leftSection: React.ReactNode;
     subtitle: React.ReactNode;
+    onClearMessages?: (id: string) => void;
+    blockStatus?: "none" | "blocked_by_me" | "blocked_me";
+    onToggleBlock?: () => void;
 }
 
 const ChatCard = ({
@@ -22,12 +32,18 @@ const ChatCard = ({
     unreadCount,
     leftSection,
     subtitle,
+    onClearMessages,
+    blockStatus,
+    onToggleBlock,
 }: ChatCardProps) => {
+    const canToggleBlock = Boolean(onToggleBlock) && blockStatus !== "blocked_me";
+    const isBlockedByMe = blockStatus === "blocked_by_me";
+
     return (
         <Card
             key={convoId}
             className={cn(
-                "border-none p-3 cursor-pointer transition-smooth glass hover:bg-muted/30",
+                "group border-none p-3 cursor-pointer transition-smooth glass hover:bg-muted/30",
                 isActive &&
                 "ring-2 ring-primary/50 bg-gradient-to-tr from-primary-glow/10 to-primary-foreground"
             )}
@@ -54,7 +70,43 @@ const ChatCard = ({
 
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1 flex-1 min-w-0">{subtitle}</div>
-                        <MoreHorizontal className="size-4 text-muted-foreground opacity-0 group-hover:opacity-100 hover:size-5 transition-smooth" />
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon-xs"
+                                    title="Conversation options"
+                                    className="opacity-0 transition-smooth group-hover:opacity-100 data-[state=open]:opacity-100"
+                                    onClick={(event) => event.stopPropagation()}
+                                >
+                                    <MoreHorizontal className="size-4" />
+                                    <span className="sr-only">Conversation options</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                align="end"
+                                onClick={(event) => event.stopPropagation()}
+                            >
+                                {canToggleBlock && (
+                                    <DropdownMenuItem onClick={onToggleBlock}>
+                                        {isBlockedByMe ? (
+                                            <Undo2 className="size-4" />
+                                        ) : (
+                                            <Ban className="size-4" />
+                                        )}
+                                        {isBlockedByMe ? "Unblock user" : "Block user"}
+                                    </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem
+                                    variant="destructive"
+                                    onClick={() => onClearMessages?.(convoId)}
+                                >
+                                    <Trash2 className="size-4" />
+                                    Delete chat
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </div>
             </div>

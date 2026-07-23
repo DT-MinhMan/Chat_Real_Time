@@ -21,11 +21,16 @@ import Logout from "../auth/Logout";
 import { useState } from "react";
 import FriendRequestDialog from "../friendRequest/FriendRequestDialog";
 import ProfileDialog from "../profile/profileDialog";
+import { useFriendStore } from "@/store/useFriendStore";
+import { Badge } from "../ui/badge";
 
 export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar();
   const [friendRequestOpen, setfriendRequestOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const receivedRequestCount = useFriendStore(
+    (state) => state.receivedList.length
+  );
 
   return (
     <>
@@ -50,7 +55,12 @@ export function NavUser({ user }: { user: User }) {
                   <span className="truncate font-medium">{user.displayName}</span>
                   <span className="truncate text-xs">{user.username}</span>
                 </div>
-                <ChevronsUpDown className="ml-auto size-4" />
+                <div className="relative ml-auto flex items-center">
+                  {receivedRequestCount > 0 && (
+                    <span className="absolute -top-1 -right-1 size-2.5 rounded-full bg-destructive ring-2 ring-sidebar" />
+                  )}
+                  <ChevronsUpDown className="size-4" />
+                </div>
               </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -83,8 +93,21 @@ export function NavUser({ user }: { user: User }) {
                   Account
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setfriendRequestOpen(true)}>
-                  <Bell className="text-muted-foreground dark:group-focus:!text-accent-foreground" />
-                  Notifications
+                  <div className="relative">
+                    <Bell className="text-muted-foreground dark:group-focus:!text-accent-foreground" />
+                    {receivedRequestCount > 0 && (
+                      <span className="absolute -top-1 -right-1 size-2 rounded-full bg-destructive" />
+                    )}
+                  </div>
+                  <span className="flex-1">Notifications</span>
+                  {receivedRequestCount > 0 && (
+                    <Badge
+                      variant="destructive"
+                      className="ml-auto min-w-5 px-1.5"
+                    >
+                      {receivedRequestCount > 99 ? "99+" : receivedRequestCount}
+                    </Badge>
+                  )}
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />

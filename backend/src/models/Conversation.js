@@ -95,6 +95,12 @@ const conversationSchema = new mongoose.Schema(
       of: Number,
       default: {},
     },
+    hiddenFor: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   {
     timestamps: true,

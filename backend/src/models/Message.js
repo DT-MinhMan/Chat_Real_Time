@@ -43,6 +43,12 @@ const messageSchema = new mongoose.Schema(
       startedAt: Date,
       endedAt: Date,
     },
+    deletedFor: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   {
     timestamps: true,

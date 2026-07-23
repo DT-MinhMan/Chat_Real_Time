@@ -58,6 +58,16 @@ export const chatService = {
         return res.data;
     },
 
+    async deleteMessageForMe(messageId: string) {
+        const res = await api.delete(`/messages/${messageId}`);
+        return res.data;
+    },
+
+    async clearConversationMessagesForMe(conversationId: string) {
+        const res = await api.delete(`/conversations/${conversationId}/messages`);
+        return res.data;
+    },
+
     async createConversation(
         type: "direct" | "group",
         name: string,

@@ -123,6 +123,7 @@ export const useChatStore = create<ChatState>()(
           }));
         } catch (error) {
           console.error("Error when send direct message", error);
+          throw error;
         }
       },
 
@@ -192,6 +193,21 @@ export const useChatStore = create<ChatState>()(
         }));
       },
 
+      updateDirectBlockStatus: (userId, blockStatus) => {
+        set((state) => ({
+          conversations: state.conversations.map((conversation) => {
+            if (
+              conversation.type !== "direct" ||
+              !conversation.participants.some((participant) => participant._id === userId)
+            ) {
+              return conversation;
+            }
+
+            return { ...conversation, blockStatus };
+          }),
+        }));
+      },
+
       // Đánh dấu hội thoại hiện tại là đã xem.
       markAsSeen: async () => {
         try {
@@ -231,6 +247,58 @@ export const useChatStore = create<ChatState>()(
           }));
         } catch (error) {
           console.error("Error when call markAsSeen in store", error);
+        }
+      },
+
+      // Xóa tin nhắn chỉ ở phía người dùng hiện tại.
+      deleteMessageForMe: async (conversationId, messageId) => {
+        try {
+          await chatService.deleteMessageForMe(messageId);
+
+          set((state) => {
+            const currentMessages = state.messages[conversationId];
+
+            if (!currentMessages) {
+              return state;
+            }
+
+            return {
+              messages: {
+                ...state.messages,
+                [conversationId]: {
+                  ...currentMessages,
+                  items: currentMessages.items.filter((message) => message._id !== messageId),
+                },
+              },
+            };
+          });
+        } catch (error) {
+          console.error("Error when delete message for me", error);
+          throw error;
+        }
+      },
+
+      // Xóa toàn bộ tin nhắn trong hội thoại chỉ ở phía người dùng hiện tại.
+      clearConversationMessagesForMe: async (conversationId) => {
+        try {
+          await chatService.clearConversationMessagesForMe(conversationId);
+
+          set((state) => {
+            const nextMessages = { ...state.messages };
+            delete nextMessages[conversationId];
+
+            return {
+              conversations: state.conversations.filter((c) => c._id !== conversationId),
+              messages: nextMessages,
+              activeConversationId:
+                state.activeConversationId === conversationId
+                  ? null
+                  : state.activeConversationId,
+            };
+          });
+        } catch (error) {
+          console.error("Error when clear conversation messages for me", error);
+          throw error;
         }
       },
 

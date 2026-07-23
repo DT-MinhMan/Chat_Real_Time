@@ -1,6 +1,7 @@
 import express from "express";
 
 import {
+  deleteMessageForMe,
   sendDirectMessage,
   sendGroupMessage,
 } from "../controllers/messageController.js";
@@ -12,6 +13,7 @@ import {
 
 //Định nghĩa api message
 const router = express.Router();
+router.delete("/:messageId", deleteMessageForMe);
 //Message trực tiếp
 router.post("/direct", checkFriendship, sendDirectMessage);
 

@@ -1,6 +1,38 @@
 import Friend from "../models/Friend.js";
 import User from "../models/User.js";
 import FriendRequest from "../models/FriendRequest.js";
+import UserBlock from "../models/UserBlock.js";
+import mongoose from "mongoose";
+import { io } from "../socket/index.js";
+
+const getBlockStatusForViewer = async (viewerId, otherUserId) => {
+  const [blockedByMe, blockedMe] = await Promise.all([
+    UserBlock.exists({ blocker: viewerId, blocked: otherUserId }),
+    UserBlock.exists({ blocker: otherUserId, blocked: viewerId }),
+  ]);
+
+  if (blockedByMe) return "blocked_by_me";
+  if (blockedMe) return "blocked_me";
+  return "none";
+};
+
+const emitBlockStatusUpdate = async (userA, userB) => {
+  const userAId = userA.toString();
+  const userBId = userB.toString();
+  const [userAStatus, userBStatus] = await Promise.all([
+    getBlockStatusForViewer(userAId, userBId),
+    getBlockStatusForViewer(userBId, userAId),
+  ]);
+
+  io.to(userAId).emit("user-block:updated", {
+    userId: userBId,
+    blockStatus: userAStatus,
+  });
+  io.to(userBId).emit("user-block:updated", {
+    userId: userAId,
+    blockStatus: userBStatus,
+  });
+};
 
 //Api gửi lời mời kết bạn 
 export const sendFriendRequest = async (req, res) => {
@@ -54,7 +86,18 @@ export const sendFriendRequest = async (req, res) => {
       message,
     });
 
-    return res.status(201).json({ message: "Friend request successfully sent.", request });
+    const populatedRequest = await FriendRequest.findById(request._id)
+      .populate("from", "_id username displayName avatarUrl")
+      .populate("to", "_id username displayName avatarUrl")
+      .lean();
+
+    io.to(to.toString()).emit("friend-request:received", populatedRequest);
+    io.to(from.toString()).emit("friend-request:sent", populatedRequest);
+
+    return res.status(201).json({
+      message: "Friend request successfully sent.",
+      request: populatedRequest,
+    });
   } catch (error) {
     console.error("Error sending friend request", error);
     return res.status(500).json({ message: "System error" });
@@ -89,13 +132,28 @@ export const acceptFriendRequest = async (req, res) => {
     await FriendRequest.findByIdAndDelete(requestId);
 
     //Hiển thị hình ảnh người kết bạn 
-    const from = await User.findById(request.from).select("_id displayName avatarUrl").lean();
+    const [from, to] = await Promise.all([
+      User.findById(request.from).select("_id username displayName avatarUrl").lean(),
+      User.findById(request.to).select("_id username displayName avatarUrl").lean(),
+    ]);
+
+    io.to(request.from.toString()).emit("friend-request:accepted", {
+      requestId,
+      friend: to,
+      acceptedBy: userId,
+    });
+    io.to(request.to.toString()).emit("friend-request:accepted", {
+      requestId,
+      friend: from,
+      acceptedBy: userId,
+    });
 
     return res.status(200).json({
       message: "Accepted the friend request successfully.",
       //Trả về người dùng hiển thị lên frontend
       newFriend: {
         _id: from?._id,
+        username: from?.username,
         displayName: from?.displayName,
         avatarUrl: from?.avatarUrl,
       },
@@ -126,6 +184,9 @@ export const declineFriendRequest = async (req, res) => {
 
     //Xóa lời mời kết bạn
     await FriendRequest.findByIdAndDelete(requestId);
+
+    io.to(request.from.toString()).emit("friend-request:declined", { requestId });
+    io.to(request.to.toString()).emit("friend-request:declined", { requestId });
 
     return res.sendStatus(204);
   } catch (error) {
@@ -171,7 +232,105 @@ export const getAllFriends = async (req, res) => {
   }
 };
 
-//Lấy danh sách lời mời kết bạn 
+//Xóa bạn bè
+export const removeFriend = async (req, res) => {
+  try {
+    const userId = req.user._id.toString();
+    const { friendId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(friendId)) {
+      return res.status(400).json({ message: "Invalid friend id." });
+    }
+
+    let userA = userId;
+    let userB = friendId;
+
+    if (userA > userB) {
+      [userA, userB] = [userB, userA];
+    }
+
+    const deletedFriendship = await Friend.findOneAndDelete({ userA, userB });
+
+    if (!deletedFriendship) {
+      return res.status(404).json({ message: "Friendship not found." });
+    }
+
+    io.to(userId).emit("friendship:removed", { friendId, removedBy: userId });
+    io.to(friendId).emit("friendship:removed", { friendId: userId, removedBy: userId });
+
+    return res.status(200).json({ message: "Friend removed successfully." });
+  } catch (error) {
+    console.error("Error removing friend", error);
+    return res.status(500).json({ message: "System error" });
+  }
+};
+
+//Chặn người dùng
+export const blockUser = async (req, res) => {
+  try {
+    const blocker = req.user._id;
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user id." });
+    }
+
+    if (blocker.toString() === userId.toString()) {
+      return res.status(400).json({ message: "You can not block yourself." });
+    }
+
+    const userExists = await User.exists({ _id: userId });
+
+    if (!userExists) {
+      return res.status(404).json({ message: "User not exists" });
+    }
+
+    await UserBlock.findOneAndUpdate(
+      { blocker, blocked: userId },
+      { $setOnInsert: { blocker, blocked: userId } },
+      { upsert: true, new: true }
+    );
+
+    await emitBlockStatusUpdate(blocker, userId);
+
+    return res.status(200).json({
+      message: "User blocked successfully.",
+      blockedUserId: userId,
+    });
+  } catch (error) {
+    console.error("Error blocking user", error);
+    return res.status(500).json({ message: "System error" });
+  }
+};
+
+//Mở chặn người dùng
+export const unblockUser = async (req, res) => {
+  try {
+    const blocker = req.user._id;
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user id." });
+    }
+
+    if (blocker.toString() === userId.toString()) {
+      return res.status(400).json({ message: "You can not unblock yourself." });
+    }
+
+    await UserBlock.findOneAndDelete({ blocker, blocked: userId });
+
+    await emitBlockStatusUpdate(blocker, userId);
+
+    return res.status(200).json({
+      message: "User unblocked successfully.",
+      unblockedUserId: userId,
+    });
+  } catch (error) {
+    console.error("Error unblocking user", error);
+    return res.status(500).json({ message: "System error" });
+  }
+};
+
 export const getFriendRequests = async (req, res) => {
   try {
     const userId = req.user._id;

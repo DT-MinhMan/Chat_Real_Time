@@ -4,6 +4,16 @@ import UserAvatar from "./UserAvatar";
 import { Card } from "../ui/card";
 import { Badge } from "../ui/badge";
 import CallMessageItem from "./CallMessageItem";
+import { Button } from "../ui/button";
+import { MoreHorizontal, Trash2 } from "lucide-react";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { useChatStore } from "@/store/useChatStore";
+import { toast } from "sonner";
 
 interface MessageItemProps {
     message: Message;
@@ -20,7 +30,43 @@ const MessageItem = ({
     selectedConvo,
     lastMessageStatus,
 }: MessageItemProps) => {
+    const { deleteMessageForMe } = useChatStore();
     const prev = index + 1 < messages.length ? messages[index + 1] : undefined;
+
+    const handleDeleteForMe = async () => {
+        try {
+            await deleteMessageForMe(selectedConvo._id, message._id);
+            toast.success("Message deleted for you.");
+        } catch {
+            toast.error("Could not delete this message. Please try again.");
+        }
+    };
+
+    const messageOptions = (align: "start" | "end" = "end") => (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    title="Message options"
+                    className="opacity-0 transition-smooth group-hover/message:opacity-100 data-[state=open]:opacity-100"
+                >
+                    <MoreHorizontal className="size-4" />
+                    <span className="sr-only">Message options</span>
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align={align}>
+                <DropdownMenuItem
+                    variant="destructive"
+                    onClick={handleDeleteForMe}
+                >
+                    <Trash2 className="size-4" />
+                    Delete for me
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
 
     const isShowTime =
         index === 0 ||
@@ -44,7 +90,10 @@ const MessageItem = ({
                         {formatMessageTime(new Date(message.createdAt))}
                     </span>
                 )}
-                <CallMessageItem message={message} />
+                <div className="group/message flex items-center justify-center gap-1">
+                    <CallMessageItem message={message} />
+                    {messageOptions("end")}
+                </div>
             </>
         );
     }
@@ -60,7 +109,7 @@ const MessageItem = ({
 
             <div
                 className={cn(
-                    "flex gap-2 message-bounce mt-1",
+                    "group/message flex gap-2 message-bounce mt-1",
                     message.isOwn ? "justify-end" : "justify-start"
                 )}
             >
@@ -84,14 +133,23 @@ const MessageItem = ({
                         message.isOwn ? "items-end" : "items-start"
                     )}
                 >
-                    <Card
+                    <div
                         className={cn(
-                            "p-3",
-                            message.isOwn ? "chat-bubble-sent border-0" : "chat-bubble-received"
+                            "flex items-center gap-1",
+                            message.isOwn ? "flex-row-reverse" : "flex-row"
                         )}
                     >
-                        <p className="text-sm leading-relaxed break-words">{message.content}</p>
-                    </Card>
+                        <Card
+                            className={cn(
+                                "p-3",
+                                message.isOwn ? "chat-bubble-sent border-0" : "chat-bubble-received"
+                            )}
+                        >
+                            <p className="text-sm leading-relaxed break-words">{message.content}</p>
+                        </Card>
+
+                        {messageOptions(message.isOwn ? "end" : "start")}
+                    </div>
 
                     {/* seen/ delivered */}
                     {message.isOwn && message._id === selectedConvo.lastMessage?._id && (

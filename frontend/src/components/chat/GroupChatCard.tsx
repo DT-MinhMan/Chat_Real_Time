@@ -4,11 +4,17 @@ import type { Conversation } from "@/types/chat";
 import ChatCard from "./ChatCard";
 import UnreadCountBadge from "./UnreadCountBadge";
 import GroupChatAvatar from "./GroupChatAvatar";
+import { toast } from "sonner";
 //Phần chat nhóm 
 const GroupChatCard = ({ convo }: { convo: Conversation }) => {
   const { user } = useAuthStore();
-  const { activeConversationId, setActiveConversation, messages, fetchMessages } =
-    useChatStore();
+  const {
+    activeConversationId,
+    clearConversationMessagesForMe,
+    setActiveConversation,
+    messages,
+    fetchMessages,
+  } = useChatStore();
 
   if (!user) return null;
 
@@ -24,6 +30,15 @@ const GroupChatCard = ({ convo }: { convo: Conversation }) => {
     }
   };
 
+  const handleClearMessages = async (id: string) => {
+    try {
+      await clearConversationMessagesForMe(id);
+      toast.success("Chat cleared for you.");
+    } catch {
+      toast.error("Could not clear this chat. Please try again.");
+    }
+  };
+
   return (
     <ChatCard
       convoId={convo._id}
@@ -35,6 +50,7 @@ const GroupChatCard = ({ convo }: { convo: Conversation }) => {
       }
       isActive={activeConversationId === convo._id}
       onSelect={handleSelectConversation}
+      onClearMessages={handleClearMessages}
       unreadCount={unreadCount}
       leftSection={
         <>

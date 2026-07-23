@@ -4,6 +4,8 @@ import { useAuthStore } from "./useAuthStore";
 import type { SocketState } from "@/types/store";
 import { useChatStore } from "./useChatStore";
 import { useCallStore } from "./useCallStore";
+import { useFriendStore } from "./useFriendStore";
+import { toast } from "sonner";
 
 const baseURL = import.meta.env.VITE_SOCKET_URL;
 
@@ -36,6 +38,43 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       set({ onlineUsers: userIds });
     });
 
+    socket.on("friend-request:received", (request) => {
+      useFriendStore.getState().addReceivedRequest(request);
+      toast.info("You received a new friend request.");
+    });
+
+    socket.on("friend-request:sent", (request) => {
+      useFriendStore.getState().addSentRequest(request);
+    });
+
+    socket.on("friend-request:accepted", ({ requestId, friend, acceptedBy }) => {
+      const friendStore = useFriendStore.getState();
+      const wasSentRequest = friendStore.sentList.some(
+        (request) => request._id === requestId
+      );
+      friendStore.removeRequestFromState(requestId);
+
+      if (friend) {
+        friendStore.addFriendToState(friend);
+      }
+
+      if (wasSentRequest || acceptedBy !== useAuthStore.getState().user?._id) {
+        toast.success("Friend request accepted.");
+      }
+    });
+
+    socket.on("friend-request:declined", ({ requestId }) => {
+      useFriendStore.getState().removeRequestFromState(requestId);
+    });
+
+    socket.on("friendship:removed", ({ friendId }) => {
+      useFriendStore.getState().removeFriendFromState(friendId);
+    });
+
+    socket.on("user-block:updated", ({ userId, blockStatus }) => {
+      useChatStore.getState().updateDirectBlockStatus(userId, blockStatus);
+    });
+
     // Nhận tin nhắn mới từ server.
     socket.on("new-message", ({ message, conversation, unreadCounts }) => {
       // Thêm message vào store chat.
@@ -66,7 +105,16 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       }
 
       // Đồng bộ hội thoại trong danh sách conversation.
-      useChatStore.getState().updateConversation(updatedConversation);
+      const chatState = useChatStore.getState();
+      const conversationExists = chatState.conversations.some(
+        (c) => c._id === updatedConversation._id
+      );
+
+      if (conversationExists) {
+        chatState.updateConversation(updatedConversation);
+      } else {
+        chatState.fetchConversations();
+      }
     });
 
     // Nhận sự kiện đã đọc tin nhắn.

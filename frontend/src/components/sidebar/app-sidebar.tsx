@@ -4,7 +4,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
@@ -24,16 +23,20 @@ import { useAuthStore } from "@/store/useAuthStore";
 import ConversationSkeleton from "../skeleton/conversationSkeleton";
 import { useChatStore } from "@/store/useChatStore";
 import { useEffect } from "react";
+import FriendListDialog from "../friends/FriendListDialog";
+import { useFriendStore } from "@/store/useFriendStore";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isDark, toggleTheme } = useThemeStore();
   const { user, accessToken } = useAuthStore();
   const { convoLoading, fetchConversations } = useChatStore();
+  const { getFriends } = useFriendStore();
 
   useEffect(() => {
     if (!accessToken) return;
     fetchConversations();
-  }, [accessToken, fetchConversations]);
+    getFriends();
+  }, [accessToken, fetchConversations, getFriends]);
 
   return (
     <Sidebar
@@ -91,13 +94,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
         {/* Dirrect Message */}
         <SidebarGroup>
-          <SidebarGroupLabel className="uppercase">Friends</SidebarGroupLabel>
-          <SidebarGroupAction
-            title="Add new friend"
-            className="cursor-pointer"
-          >
-            <AddFriendModal />
-          </SidebarGroupAction>
+          <div className="flex items-center justify-between">
+            <SidebarGroupLabel className="uppercase">Friends</SidebarGroupLabel>
+            <div className="flex items-center gap-1">
+              <FriendListDialog />
+              <AddFriendModal />
+            </div>
+          </div>
 
           <SidebarGroupContent>
             {convoLoading ? <ConversationSkeleton /> : <DirectMessageList />}

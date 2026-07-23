@@ -73,8 +73,19 @@ export interface ChatState {
   // Cập nhật convo real time
   // updateConversation: (conversation: unknown) => void;
   updateConversation: (conversation: Partial<Conversation> & { _id: string }) => void;
+  updateDirectBlockStatus: (
+    userId: string,
+    blockStatus: "none" | "blocked_by_me" | "blocked_me"
+  ) => void;
  
   markAsSeen: () => Promise<void>;
+
+  deleteMessageForMe: (
+    conversationId: string,
+    messageId: string
+  ) => Promise<void>;
+
+  clearConversationMessagesForMe: (conversationId: string) => Promise<void>;
 
   addConvo: (convo: Conversation) => void;
 
@@ -103,6 +114,14 @@ export interface FriendState {
   acceptRequest: (requestId: string) => Promise<void>;
   declineRequest: (requestId: string) => Promise<void>;
   getFriends: () => Promise<void>;
+  removeFriend: (friendId: string) => Promise<void>;
+  addReceivedRequest: (request: FriendRequest) => void;
+  addSentRequest: (request: FriendRequest) => void;
+  removeRequestFromState: (requestId: string) => void;
+  addFriendToState: (friend: Friend) => void;
+  removeFriendFromState: (friendId: string) => void;
+  blockUser: (userId: string) => Promise<void>;
+  unblockUser: (userId: string) => Promise<void>;
 }
 
 export interface UserState {

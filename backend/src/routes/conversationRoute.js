@@ -1,6 +1,7 @@
 import express from "express";
 import {
   createConversation,
+  clearConversationMessagesForMe,
   getConversations,
   getMessages,
   markAsSeen,
@@ -16,6 +17,7 @@ router.post("/", checkFriendship, createConversation);
 router.get("/", getConversations);
 //Lấy tin nhắn
 router.get("/:conversationId/messages", getMessages);
+router.delete("/:conversationId/messages", clearConversationMessagesForMe);
 //Đánh dấu đã đọc tin nhắn 
 router.patch("/:conversationId/seen", markAsSeen);
 

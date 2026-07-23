@@ -29,4 +29,5 @@ dist-ssr
 *.sln
 *.sw?
 **/AGENTS.md
+**/agents.md
 .agents/

@@ -124,7 +124,7 @@ export function SigninForm({className,...props}: React.ComponentProps<"div">) {
                   href="/signup"
                   className="underline underline-offset-4"
                 >
-                  Sign in
+                  Sign up
                 </a>
               </div>
             </div>

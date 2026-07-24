@@ -9,7 +9,7 @@ import { UserPlus } from "lucide-react";
 interface SendRequestProps {
   register: UseFormRegister<IFormValues>;
   loading: boolean;
-  searchedUsername: string;
+  foundDisplayName: string;
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
   onBack: () => void;
 }
@@ -17,7 +17,7 @@ interface SendRequestProps {
 const SendFriendRequestForm = ({
   register,
   loading,
-  searchedUsername,
+  foundDisplayName,
   onSubmit,
   onBack,
 }: SendRequestProps) => {
@@ -25,7 +25,7 @@ const SendFriendRequestForm = ({
     <form onSubmit={onSubmit}>
       <div className="space-y-4">
         <span className="success-message">
-          Founded <span className="font-semibold">@{searchedUsername}</span> 
+          Founded <span className="font-semibold">{foundDisplayName}</span> 
         </span>
 
         <div className="space-y-4">

@@ -1,7 +1,9 @@
 import express from "express";
 import {
   authMe,
-  searchUserByUsername,
+  changePassword,
+  searchUserByDisplayName,
+  updateProfile,
   uploadAvatar,
 } from "../controllers/userControllers.js";
 import { upload } from "../middlewares/uploadMiddleware.js";
@@ -10,8 +12,10 @@ import { upload } from "../middlewares/uploadMiddleware.js";
 const router = express.Router();
 //Xác thực người dùng
 router.get("/me", authMe);
+router.patch("/me", updateProfile);
+router.patch("/me/password", changePassword);
 //Tìm kiếm người dùng
-router.get("/search", searchUserByUsername);
+router.get("/search", searchUserByDisplayName);
 //upload avatar
 router.post("/uploadAvatar", upload.single("file"), uploadAvatar);
 

@@ -24,6 +24,16 @@ const onlineUsers = new Map(); // { userId: Set<socketId> }
 
 const getOnlineUserIds = () => Array.from(onlineUsers.keys());
 
+const removeUserFromConversationRoom = (userId, conversationId) => {
+  const socketIds = onlineUsers.get(userId.toString());
+
+  if (!socketIds) return;
+
+  socketIds.forEach((socketId) => {
+    io.sockets.sockets.get(socketId)?.leave(conversationId.toString());
+  });
+};
+
 io.on("connection", async (socket) => {
   const user = socket.user;
 
@@ -68,4 +78,4 @@ io.on("connection", async (socket) => {
   });
 });
 
-export { io, app, server };
+export { io, app, server, removeUserFromConversationRoom };

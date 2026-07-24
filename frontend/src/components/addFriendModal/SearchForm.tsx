@@ -11,9 +11,9 @@ interface SearchFormProps {
   register: UseFormRegister<IFormValues>;
   errors: FieldErrors<IFormValues>;
   loading: boolean;
-  usernameValue: string;
+  displayNameValue: string;
   isFound: boolean | null;
-  searchedUsername: string;
+  searchedDisplayName: string;
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
   onCancel: () => void;
 }
@@ -21,10 +21,10 @@ interface SearchFormProps {
 const SearchForm = ({
   register,
   errors,
-  usernameValue,
+  displayNameValue,
   loading,
   isFound,
-  searchedUsername,
+  searchedDisplayName,
   onSubmit,
   onCancel,
 }: SearchFormProps) => {
@@ -35,28 +35,28 @@ const SearchForm = ({
     >
       <div className="space-y-2">
         <Label
-          htmlFor="username"
+          htmlFor="displayName"
           className="text-sm font-semibold"
         >
-          Search by username
+          Search by display name
         </Label>
 
         <Input
-          id="username"
-          placeholder="Text username in here..."
+          id="displayName"
+          placeholder="Text display name in here..."
           className="glass border-border/50 focus:border-primary/50 transition-smooth"
-          {...register("username", {
-            required: "You must fill Username",
+          {...register("displayName", {
+            required: "You must fill display name",
           })}
         ></Input>
-        {errors.username && (
-          <p className="error-message">{errors.username.message}</p>
+        {errors.displayName && (
+          <p className="error-message">{errors.displayName.message}</p>
         )}
 
         {isFound === false && (
           <span className="error-message">
             User not found
-            <span className="font-semibold">@{searchedUsername}</span>
+            <span className="font-semibold"> {searchedDisplayName}</span>
           </span>
         )}
       </div>
@@ -75,7 +75,7 @@ const SearchForm = ({
 
         <Button
           type="submit"
-          disabled={loading || !usernameValue?.trim()}
+          disabled={loading || !displayNameValue?.trim()}
           className="flex-1 bg-gradient-chat text-white hover:opacity-90 transition-smooth"
         >
           {loading ? (

@@ -1,8 +1,10 @@
 import api from "@/lib/axios";
 
 export const friendService = {
-  async searchByUsername(username: string) {
-    const res = await api.get(`/users/search?username=${username}`);
+  async searchByDisplayName(displayName: string) {
+    const res = await api.get("/users/search", {
+      params: { displayName },
+    });
     return res.data.user;
   },
 

@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { formatOnlineTime, cn } from "@/lib/utils";
-import { Ban, MoreHorizontal, Trash2, Undo2 } from "lucide-react";
+import { Ban, LogOut, MoreHorizontal, Trash2, Undo2, UserPlus, Users } from "lucide-react";
 import { Button } from "../ui/button";
 import {
     DropdownMenu,
@@ -19,6 +19,9 @@ interface ChatCardProps {
     leftSection: React.ReactNode;
     subtitle: React.ReactNode;
     onClearMessages?: (id: string) => void;
+    onLeaveGroup?: (id: string) => void;
+    onViewMembers?: () => void;
+    onAddMembers?: () => void;
     blockStatus?: "none" | "blocked_by_me" | "blocked_me";
     onToggleBlock?: () => void;
 }
@@ -33,6 +36,9 @@ const ChatCard = ({
     leftSection,
     subtitle,
     onClearMessages,
+    onLeaveGroup,
+    onViewMembers,
+    onAddMembers,
     blockStatus,
     onToggleBlock,
 }: ChatCardProps) => {
@@ -96,6 +102,27 @@ const ChatCard = ({
                                             <Ban className="size-4" />
                                         )}
                                         {isBlockedByMe ? "Unblock user" : "Block user"}
+                                    </DropdownMenuItem>
+                                )}
+                                {onViewMembers && (
+                                    <DropdownMenuItem onClick={onViewMembers}>
+                                        <Users className="size-4" />
+                                        Group members
+                                    </DropdownMenuItem>
+                                )}
+                                {onAddMembers && (
+                                    <DropdownMenuItem onClick={onAddMembers}>
+                                        <UserPlus className="size-4" />
+                                        Add members
+                                    </DropdownMenuItem>
+                                )}
+                                {onLeaveGroup && (
+                                    <DropdownMenuItem
+                                        variant="destructive"
+                                        onClick={() => onLeaveGroup(convoId)}
+                                    >
+                                        <LogOut className="size-4" />
+                                        Leave group
                                     </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem

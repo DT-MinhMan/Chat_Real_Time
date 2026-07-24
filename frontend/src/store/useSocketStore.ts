@@ -130,6 +130,24 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       useChatStore.getState().updateConversation(updated);
     });
 
+    socket.on("conversation:removed", ({ conversationId }) => {
+      useChatStore.getState().removeConversation(conversationId);
+    });
+
+    socket.on("group:member-left", ({ conversationId, participants }) => {
+      useChatStore.getState().updateConversation({
+        _id: conversationId,
+        participants,
+      });
+    });
+
+    socket.on("group:member-added", ({ conversationId, participants }) => {
+      useChatStore.getState().updateConversation({
+        _id: conversationId,
+        participants,
+      });
+    });
+
     // Nhận hội thoại nhóm mới, thêm vào danh sách và join room tương ứng.
     socket.on("new-group", (conversation) => {
       useChatStore.getState().addConvo(conversation);

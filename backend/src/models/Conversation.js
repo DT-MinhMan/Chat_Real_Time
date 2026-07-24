@@ -45,7 +45,7 @@ const lastMessageSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["text", "call"],
+      enum: ["text", "call", "system"],
       default: "text",
     },
     senderId: {

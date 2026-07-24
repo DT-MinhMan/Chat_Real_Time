@@ -11,6 +11,15 @@ export interface User {
   updatedAt?: string;
 }
 
+export type UpdateProfilePayload = Pick<User, "displayName"> &
+  Partial<Pick<User, "bio" | "phone">>;
+
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
 export interface Friend {
   _id: string;
   username: string;

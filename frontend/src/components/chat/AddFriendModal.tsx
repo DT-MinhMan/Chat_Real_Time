@@ -16,15 +16,15 @@ import SendFriendRequestForm from "@/components/addFriendModal/SendFriendRequest
 import { Button } from "../ui/button";
 
 export interface IFormValues {
-  username: string;
+  displayName: string;
   message: string;
 }
 
 const AddFriendModal = () => {
   const [isFound, setIsFound] = useState<boolean | null>(null);
   const [searchUser, setSearchUser] = useState<User>();
-  const [searchedUsername, setSearchedUsername] = useState("");
-  const { loading, searchByUsername, addFriend } = useFriendStore();
+  const [searchedDisplayName, setSearchedDisplayName] = useState("");
+  const { loading, searchByDisplayName, addFriend } = useFriendStore();
 
   const {
     register,
@@ -33,22 +33,22 @@ const AddFriendModal = () => {
     reset,
     formState: { errors },
   } = useForm<IFormValues>({
-    defaultValues: { username: "", message: "" },
+    defaultValues: { displayName: "", message: "" },
   });
 
   //Lưu username người dùng nhập vào 
-  const usernameValue = watch("username");
+  const displayNameValue = watch("displayName");
 
   //Logic tìm người dùng bằng username
   const handleSearch = handleSubmit(async (data) => {
-    const username = data.username.trim();
-    if (!username) return;
+    const displayName = data.displayName.trim();
+    if (!displayName) return;
 
     setIsFound(null);
-    setSearchedUsername(username);
+    setSearchedDisplayName(displayName);
 
     try {
-      const foundUser = await searchByUsername(username);
+      const foundUser = await searchByDisplayName(displayName);
       if (foundUser) {
         setIsFound(true);
         setSearchUser(foundUser);
@@ -72,13 +72,18 @@ const AddFriendModal = () => {
       handleCancel();
     } catch (error) {
       console.error("Error when send request", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Error when send request add friend. Please try again"
+      );
     }
   });
 
   //Reset nếu cancel
   const handleCancel = () => {
     reset();
-    setSearchedUsername("");
+    setSearchedDisplayName("");
     setIsFound(null);
   };
 
@@ -107,10 +112,10 @@ const AddFriendModal = () => {
             <SearchForm
               register={register}
               errors={errors}
-              usernameValue={usernameValue}
+              displayNameValue={displayNameValue}
               loading={loading}
               isFound={isFound}
-              searchedUsername={searchedUsername}
+              searchedDisplayName={searchedDisplayName}
               onSubmit={handleSearch}
               onCancel={handleCancel}
             />
@@ -122,7 +127,7 @@ const AddFriendModal = () => {
             <SendFriendRequestForm
               register={register}
               loading={loading}
-              searchedUsername={searchedUsername}
+              foundDisplayName={searchUser?.displayName ?? searchedDisplayName}
               onSubmit={handleSend}
               onBack={() => setIsFound(null)}
             />

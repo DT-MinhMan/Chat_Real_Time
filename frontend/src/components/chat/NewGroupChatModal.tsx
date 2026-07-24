@@ -9,7 +9,7 @@ import {
   DialogTrigger,
 } from "../ui/dialog";
 import { Button } from "../ui/button";
-import { UserPlus, Users } from "lucide-react";
+import { MessageCirclePlus, UserPlus } from "lucide-react";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import type { Friend } from "@/types/user";
@@ -82,7 +82,7 @@ const NewGroupChatModal = () => {
           onClick={handleGetFriends}
           className="cursor-pointer"
         >
-          <Users className="size-4" />
+          <MessageCirclePlus className="size-4" />
           <span className="sr-only">Create a group</span>
         </Button>
       </DialogTrigger>

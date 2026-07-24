@@ -20,8 +20,12 @@ const messageSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["text", "call"],
+      enum: ["text", "call", "system"],
       default: "text",
+    },
+    systemType: {
+      type: String,
+      enum: ["member_left", "member_joined"],
     },
     imgUrl: {
       type: String,

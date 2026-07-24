@@ -98,6 +98,26 @@ const MessageItem = ({
         );
     }
 
+    if (message.type === "system") {
+        return (
+            <>
+                {isShowTime && (
+                    <span className="flex justify-center text-xs text-muted-foreground px-1">
+                        {formatMessageTime(new Date(message.createdAt))}
+                    </span>
+                )}
+                <div className="flex justify-center px-4">
+                    <Badge
+                        variant="outline"
+                        className="max-w-full border-0 bg-muted text-muted-foreground"
+                    >
+                        <span className="truncate text-xs">{message.content}</span>
+                    </Badge>
+                </div>
+            </>
+        );
+    }
+
     return (
         <>
             {/* Thời gian */}

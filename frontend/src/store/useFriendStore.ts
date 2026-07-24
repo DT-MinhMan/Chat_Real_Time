@@ -1,4 +1,5 @@
 ﻿import { friendService } from "@/services/friendService";
+import axios from "axios";
 import type { FriendState } from "@/types/store";
 import { create } from "zustand";
 
@@ -16,16 +17,16 @@ export const useFriendStore = create<FriendState>((set, get) => ({
   // Danh sách lời mời đã gửi.
   sentList: [],
 
-  // Tìm người dùng theo username.
-  searchByUsername: async (username) => {
+  // Tìm người dùng theo display name.
+  searchByDisplayName: async (displayName) => {
     try {
       set({ loading: true });
 
-      const user = await friendService.searchByUsername(username);
+      const user = await friendService.searchByDisplayName(displayName);
 
       return user;
     } catch (error) {
-      console.error("Error when find user by username", error);
+      console.error("Error when find user by display name", error);
       return null;
     } finally {
       set({ loading: false });
@@ -45,7 +46,10 @@ export const useFriendStore = create<FriendState>((set, get) => ({
       return result.message;
     } catch (error) {
       console.error("Error when call addFriend", error);
-      return "Error when send request add friend. Please try again";
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.message
+        : undefined;
+      throw new Error(message ?? "Error when send request add friend. Please try again");
     } finally {
       set({ loading: false });
     }

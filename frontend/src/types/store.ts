@@ -1,6 +1,6 @@
 import type { Socket } from "socket.io-client";
 import type { Conversation, Message } from './chat';
-import type { Friend, FriendRequest, User } from "./user";
+import type { Friend, FriendRequest, UpdateProfilePayload, User } from "./user";
 
 //Định nghĩa cấu trúc dữ liệu cho store Auth
 export interface AuthState {
@@ -87,6 +87,15 @@ export interface ChatState {
 
   clearConversationMessagesForMe: (conversationId: string) => Promise<void>;
 
+  leaveGroupConversation: (conversationId: string) => Promise<void>;
+
+  addGroupMembers: (
+    conversationId: string,
+    memberIds: string[]
+  ) => Promise<void>;
+
+  removeConversation: (conversationId: string) => void;
+
   addConvo: (convo: Conversation) => void;
 
   createConversation: (
@@ -108,7 +117,7 @@ export interface FriendState {
   loading: boolean;
   receivedList: FriendRequest[];
   sentList: FriendRequest[];
-  searchByUsername: (username: string) => Promise<User | null>;
+  searchByDisplayName: (displayName: string) => Promise<User | null>;
   addFriend: (to: string, message?: string) => Promise<string>;
   getAllFriendRequests: () => Promise<void>;
   acceptRequest: (requestId: string) => Promise<void>;
@@ -125,5 +134,6 @@ export interface FriendState {
 }
 
 export interface UserState {
+  updateProfile: (payload: UpdateProfilePayload) => Promise<void>;
   updateAvatarUrl: (formData: FormData) => Promise<void>;
 }

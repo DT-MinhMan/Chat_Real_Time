@@ -9,13 +9,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useThemeStore } from "@/store/useThemeStore";
-import { useState } from "react";
 
 const PreferencesForm = () => {
     const { isDark, toggleTheme } = useThemeStore();
-
-    //   các bạn cần handle logic setOnlineStatus
-    const [onlineStatus, setOnlineStatus] = useState(false);
 
     return (
         <Card className="glass-strong border-border/30">
@@ -53,26 +49,6 @@ const PreferencesForm = () => {
                     </div>
                 </div>
 
-                {/* Online Status */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <Label
-                            htmlFor="online-status"
-                            className="text-base font-medium"
-                        >
-                            Show online status
-                        </Label>
-                        <p className="text-sm text-muted-foreground">
-                            Allow others to see when you are online.
-                        </p>
-                    </div>
-                    <Switch
-                        id="online-status"
-                        checked={onlineStatus}
-                        onCheckedChange={setOnlineStatus}
-                        className="data-[state=checked]:bg-primary-glow"
-                    />
-                </div>
             </CardContent>
         </Card>
     );

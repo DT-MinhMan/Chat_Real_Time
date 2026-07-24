@@ -208,6 +208,22 @@ export const useChatStore = create<ChatState>()(
         }));
       },
 
+      removeConversation: (conversationId) => {
+        set((state) => {
+          const nextMessages = { ...state.messages };
+          delete nextMessages[conversationId];
+
+          return {
+            conversations: state.conversations.filter((c) => c._id !== conversationId),
+            messages: nextMessages,
+            activeConversationId:
+              state.activeConversationId === conversationId
+                ? null
+                : state.activeConversationId,
+          };
+        });
+      },
+
       // Đánh dấu hội thoại hiện tại là đã xem.
       markAsSeen: async () => {
         try {
@@ -282,23 +298,36 @@ export const useChatStore = create<ChatState>()(
       clearConversationMessagesForMe: async (conversationId) => {
         try {
           await chatService.clearConversationMessagesForMe(conversationId);
-
-          set((state) => {
-            const nextMessages = { ...state.messages };
-            delete nextMessages[conversationId];
-
-            return {
-              conversations: state.conversations.filter((c) => c._id !== conversationId),
-              messages: nextMessages,
-              activeConversationId:
-                state.activeConversationId === conversationId
-                  ? null
-                  : state.activeConversationId,
-            };
-          });
+          get().removeConversation(conversationId);
         } catch (error) {
           console.error("Error when clear conversation messages for me", error);
           throw error;
+        }
+      },
+
+      leaveGroupConversation: async (conversationId) => {
+        try {
+          await chatService.leaveGroupConversation(conversationId);
+          get().removeConversation(conversationId);
+        } catch (error) {
+          console.error("Error when leave group conversation", error);
+          throw error;
+        }
+      },
+
+      addGroupMembers: async (conversationId, memberIds) => {
+        try {
+          set({ loading: true });
+          const conversation = await chatService.addGroupMembers(
+            conversationId,
+            memberIds
+          );
+          get().updateConversation(conversation);
+        } catch (error) {
+          console.error("Error when add group members", error);
+          throw error;
+        } finally {
+          set({ loading: false });
         }
       },
 

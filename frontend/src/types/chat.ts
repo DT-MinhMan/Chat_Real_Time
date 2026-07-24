@@ -1,8 +1,11 @@
 //Định nghĩa cấu trúc dữ liệu cho Chat
 export interface Participant {
   _id: string;
+  username?: string;
   displayName: string;
   avatarUrl?: string | null;
+  bio?: string;
+  phone?: string;
   joinedAt: string;
 }
 
@@ -20,7 +23,7 @@ export interface Group {
 export interface LastMessage {
   _id: string;
   content: string;
-  type?: "text" | "call";
+  type?: "text" | "call" | "system";
   createdAt: string;
   sender: {
     _id: string;
@@ -52,7 +55,8 @@ export interface Message {
   conversationId: string;
   senderId: string;
   content: string | null;
-  type?: "text" | "call";
+  type?: "text" | "call" | "system";
+  systemType?: "member_left" | "member_joined";
   imgUrl?: string | null;
   callMeta?: {
     callId: string;

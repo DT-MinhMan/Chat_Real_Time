@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Conversation } from "@/types/chat";
 import ChatCard from "./ChatCard";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -9,9 +10,12 @@ import UnreadCountBadge from "./UnreadCountBadge";
 import { useSocketStore } from "@/store/useSocketStore";
 import { useFriendStore } from "@/store/useFriendStore";
 import { toast } from "sonner";
+import UserProfileHoverCard from "./UserProfileHoverCard";
+import { Popover, PopoverAnchor, PopoverContent } from "../ui/popover";
 
 //Phần tin nhắn trực tiếp 
 const DirectMessageCard = ({ convo }: { convo: Conversation }) => {
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
     const { user } = useAuthStore();
     const {
         activeConversationId,
@@ -85,19 +89,40 @@ const DirectMessageCard = ({ convo }: { convo: Conversation }) => {
             onToggleBlock={handleToggleBlock}
             unreadCount={unreadCount}
             leftSection={
-                <>
-                    <UserAvatar
-                        type="sidebar"
-                        name={otherUser.displayName ?? ""}
-                        avatarUrl={otherUser.avatarUrl ?? undefined}
-                    />
-                    <StatusBadge
-                        status={
-                            onlineUsers.includes(otherUser?._id ?? "") ? "online" : "offline"
-                        }
-                    />
-                    {unreadCount > 0 && <UnreadCountBadge unreadCount={unreadCount} />}
-                </>
+                <Popover open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+                    <PopoverAnchor asChild>
+                        <div
+                            className="relative"
+                            onMouseEnter={() => setIsProfileOpen(true)}
+                            onMouseLeave={() => setIsProfileOpen(false)}
+                        >
+                            <UserAvatar
+                                type="sidebar"
+                                name={otherUser.displayName ?? ""}
+                                avatarUrl={otherUser.avatarUrl ?? undefined}
+                            />
+                            <StatusBadge
+                                status={
+                                    onlineUsers.includes(otherUser?._id ?? "") ? "online" : "offline"
+                                }
+                            />
+                            {unreadCount > 0 && <UnreadCountBadge unreadCount={unreadCount} />}
+                        </div>
+                    </PopoverAnchor>
+                    <PopoverContent
+                        side="right"
+                        align="start"
+                        sideOffset={12}
+                        className="w-auto border-0 bg-transparent p-0 shadow-none"
+                        onMouseEnter={() => setIsProfileOpen(true)}
+                        onMouseLeave={() => setIsProfileOpen(false)}
+                    >
+                        <UserProfileHoverCard
+                            user={otherUser}
+                            isOnline={onlineUsers.includes(otherUser?._id ?? "")}
+                        />
+                    </PopoverContent>
+                </Popover>
             }
             subtitle={
                 <p

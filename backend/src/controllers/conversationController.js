@@ -1,7 +1,11 @@
 import Conversation from "../models/Conversation.js";
 import Message from "../models/Message.js";
 import UserBlock from "../models/UserBlock.js";
-import { io } from "../socket/index.js";
+import { io, removeUserFromConversationRoom } from "../socket/index.js";
+import {
+  emitNewMessage,
+  updateConversationAfterCreateMessage,
+} from "../utils/messageHelper.js";
 
 //Tạo cuộc trò chuyện mới
 export const createConversation = async (req, res) => {
@@ -58,7 +62,7 @@ export const createConversation = async (req, res) => {
 
     //Nạp thêm thông tin người dùng cho các hàm liên quan
     await conversation.populate([
-      { path: "participants.userId", select: "displayName avatarUrl" },
+      { path: "participants.userId", select: "username displayName avatarUrl bio phone" },
       {
         path: "seenBy",
         select: "displayName avatarUrl",
@@ -68,8 +72,11 @@ export const createConversation = async (req, res) => {
 
     const participants = (conversation.participants || []).map((p) => ({
       _id: p.userId?._id,
+      username: p.userId?.username,
       displayName: p.userId?.displayName,
       avatarUrl: p.userId?.avatarUrl ?? null,
+      bio: p.userId?.bio,
+      phone: p.userId?.phone,
       joinedAt: p.joinedAt,
     }));
 
@@ -105,7 +112,7 @@ export const getConversations = async (req, res) => {
       .sort({ lastMessageAt: -1, updatedAt: -1 })
       .populate({
         path: "participants.userId",
-        select: "displayName avatarUrl",
+        select: "username displayName avatarUrl bio phone",
       })
       .populate({
         path: "lastMessage.senderId",
@@ -155,8 +162,11 @@ export const getConversations = async (req, res) => {
     const formatted = conversations.map((convo) => {
       const participants = (convo.participants || []).map((p) => ({
         _id: p.userId?._id,
+        username: p.userId?.username,
         displayName: p.userId?.displayName,
         avatarUrl: p.userId?.avatarUrl ?? null,
+        bio: p.userId?.bio,
+        phone: p.userId?.phone,
         joinedAt: p.joinedAt,
       }));
       const otherUser =
@@ -266,6 +276,147 @@ export const clearConversationMessagesForMe = async (req, res) => {
     return res.status(200).json({ message: "Conversation messages cleared for you." });
   } catch (error) {
     console.error("Error when clearing conversation messages", error);
+    return res.status(500).json({ message: "System error" });
+  }
+};
+
+export const leaveGroupConversation = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const userId = req.user._id;
+
+    const conversation = await Conversation.findOne({
+      _id: conversationId,
+      type: "group",
+      "participants.userId": userId,
+    });
+
+    if (!conversation) {
+      return res.status(404).json({ message: "Group conversation not found." });
+    }
+
+    conversation.participants = conversation.participants.filter(
+      (participant) => participant.userId.toString() !== userId.toString()
+    );
+    conversation.hiddenFor.addToSet(userId);
+    conversation.unreadCounts.delete(userId.toString());
+
+    const message = await Message.create({
+      conversationId,
+      senderId: userId,
+      type: "system",
+      systemType: "member_left",
+      content: `${req.user.displayName} left the group.`,
+    });
+
+    updateConversationAfterCreateMessage(conversation, message, userId);
+    conversation.hiddenFor.addToSet(userId);
+    conversation.unreadCounts.delete(userId.toString());
+
+    await conversation.save();
+    await conversation.populate({
+      path: "participants.userId",
+      select: "username displayName avatarUrl",
+    });
+
+    const participants = (conversation.participants || []).map((p) => ({
+      _id: p.userId?._id,
+      username: p.userId?.username,
+      displayName: p.userId?.displayName,
+      avatarUrl: p.userId?.avatarUrl ?? null,
+      joinedAt: p.joinedAt,
+    }));
+
+    removeUserFromConversationRoom(userId, conversationId);
+    emitNewMessage(io, conversation, message);
+    io.to(userId.toString()).emit("conversation:removed", { conversationId });
+    io.to(conversationId).emit("group:member-left", {
+      conversationId,
+      participants,
+      leftUserId: userId,
+    });
+
+    return res.status(200).json({ message: "You left the group." });
+  } catch (error) {
+    console.error("Error when leaving group conversation", error);
+    return res.status(500).json({ message: "System error" });
+  }
+};
+
+export const addGroupMembers = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const { memberIds } = req.body;
+    const userId = req.user._id;
+
+    if (!Array.isArray(memberIds) || memberIds.length === 0) {
+      return res.status(400).json({ message: "Member list is required." });
+    }
+
+    const conversation = await Conversation.findOne({
+      _id: conversationId,
+      type: "group",
+      "participants.userId": userId,
+    });
+
+    if (!conversation) {
+      return res.status(404).json({ message: "Group conversation not found." });
+    }
+
+    const existingMemberIds = new Set(
+      conversation.participants.map((participant) =>
+        participant.userId.toString()
+      )
+    );
+    const newMemberIds = memberIds.filter(
+      (memberId) => !existingMemberIds.has(memberId.toString())
+    );
+
+    if (newMemberIds.length === 0) {
+      return res.status(400).json({ message: "Selected users are already in this group." });
+    }
+
+    newMemberIds.forEach((memberId) => {
+      conversation.participants.push({ userId: memberId });
+    });
+
+    const message = await Message.create({
+      conversationId,
+      senderId: userId,
+      type: "system",
+      systemType: "member_joined",
+      content: `${req.user.displayName} added ${newMemberIds.length} member(s) to the group.`,
+    });
+
+    updateConversationAfterCreateMessage(conversation, message, userId);
+
+    await conversation.save();
+    await conversation.populate({
+      path: "participants.userId",
+      select: "username displayName avatarUrl",
+    });
+
+    const participants = (conversation.participants || []).map((p) => ({
+      _id: p.userId?._id,
+      username: p.userId?.username,
+      displayName: p.userId?.displayName,
+      avatarUrl: p.userId?.avatarUrl ?? null,
+      joinedAt: p.joinedAt,
+    }));
+    const formatted = { ...conversation.toObject(), participants };
+
+    emitNewMessage(io, conversation, message);
+    io.to(conversationId).emit("group:member-added", {
+      conversationId,
+      participants,
+    });
+    newMemberIds.forEach((memberId) => {
+      io.to(memberId.toString()).emit("new-group", formatted);
+    });
+
+    return res.status(200).json({ conversation: formatted });
+  } catch (error) {
+    console.error("Error when adding group members", error);
     return res.status(500).json({ message: "System error" });
   }
 };

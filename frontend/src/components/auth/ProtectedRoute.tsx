@@ -30,7 +30,7 @@ const ProtectedRoute = () => {
     if (starting || loading) {
         return (
             <div className="flex h-screen items-center justify-center">
-            Page is loading...
+            The first time you access it, it might take about 20-30 seconds. Please hang on for a moment!
         </div>
         );
     }
